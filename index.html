@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Half Marathon Plan</title>
+    
+    <!-- Iconos para navegador y móviles -->
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon.png">
+
     <style>
         /* Variables de color - Modo Claro (Por defecto) */
         :root {
@@ -529,11 +534,9 @@
         // Función para extraer los KM de un string de entrenamiento
         function extractKm(runString) {
             if (!runString) return 0;
-            // Caso especial: la Media Maratón final
             if (runString.toLowerCase().includes('half marathon')) {
                 return 21.1;
             }
-            // Buscar un número (puede tener decimales) justo antes de la letra 'K'
             const match = runString.match(/(\d+(?:\.\d+)?)K/i);
             if (match && match[1]) {
                 return parseFloat(match[1]);
@@ -546,7 +549,7 @@
             let total = 0;
             for (const key in progress) {
                 if (progress[key]) {
-                    const parts = key.split('-'); // ej: run-0-1-mid
+                    const parts = key.split('-'); 
                     const pIndex = parseInt(parts[1]);
                     const wIndex = parseInt(parts[2]);
                     const type = parts[3];
@@ -641,7 +644,6 @@
         }
 
         function showCongratsPopup(km) {
-            // Formatea el número para quitar el .0 si es exacto (ej: 45.0 -> 45)
             const formattedKm = km % 1 === 0 ? km : km.toFixed(1);
             document.getElementById('congratsKmValue').textContent = formattedKm;
             congratsOverlay.classList.add('active');
@@ -660,7 +662,6 @@
                 progress[currentRunId] = true;
                 saveProgress(progress);
                 
-                // Calcular el total y mostrar pop-up de felicitación
                 const totalKm = calculateTotalKm(progress);
                 showCongratsPopup(totalKm);
             } else {
