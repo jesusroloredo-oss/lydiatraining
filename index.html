@@ -58,7 +58,6 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* Botón de Modo Oscuro/Claro */
         .theme-toggle {
             position: absolute;
             top: 20px;
@@ -213,7 +212,6 @@
             transition: all 0.3s;
         }
 
-        /* Estados cuando está completado */
         .run-btn.done {
             border-color: var(--success);
             background: var(--success-light);
@@ -350,6 +348,34 @@
         .btn-close:active {
             background: var(--badge-bg);
         }
+
+        /* Estilos específicos para el modal de felicitación */
+        .congrats-icon {
+            font-size: 50px;
+            margin-bottom: 16px;
+            animation: bounce 1s infinite alternate;
+        }
+        .congrats-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+        .congrats-text {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+        .congrats-km {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
     </style>
 </head>
 <body>
@@ -385,6 +411,22 @@
         </div>
     </div>
 
+    <!-- Modal de Felicitación (Pop-up) -->
+    <div class="modal-overlay" id="congratsOverlay" style="z-index: 60;">
+        <div class="modal" style="text-align: center;">
+            <div class="congrats-icon">🎉</div>
+            <div class="congrats-title">¡Enhorabuena!</div>
+            <div class="congrats-text">
+                Congratulations you did <br>
+                <span class="congrats-km"><span id="congratsKmValue">0</span> km</span> <br>
+                en total hasta ahora.
+            </div>
+            <div class="modal-actions">
+                <button class="btn-mark mark-done" onclick="closeCongratsPopup()">¡A por el siguiente! 💪</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Lógica del Tema Claro / Oscuro
         const themeToggle = document.getElementById('themeToggle');
@@ -395,7 +437,6 @@
             themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
         }
 
-        // Detectar preferencia del sistema o guardada
         const savedTheme = localStorage.getItem('themeApp');
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -405,12 +446,10 @@
             setTheme('light');
         }
 
-        // Evento al pulsar el botón
         themeToggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             setTheme(currentTheme === 'dark' ? 'light' : 'dark');
         });
-
 
         // Datos del Plan
         const planData = [
@@ -471,6 +510,7 @@
 
         const container = document.getElementById('app-container');
         const modalOverlay = document.getElementById('modalOverlay');
+        const congratsOverlay = document.getElementById('congratsOverlay');
         const btnClose = document.getElementById('btnClose');
         const btnMarkDone = document.getElementById('btnMarkDone');
         const btnMarkUndone = document.getElementById('btnMarkUndone');
@@ -484,6 +524,40 @@
 
         function saveProgress(progressObj) {
             localStorage.setItem('halfMarathonProgressApp', JSON.stringify(progressObj));
+        }
+
+        // Función para extraer los KM de un string de entrenamiento
+        function extractKm(runString) {
+            if (!runString) return 0;
+            // Caso especial: la Media Maratón final
+            if (runString.toLowerCase().includes('half marathon')) {
+                return 21.1;
+            }
+            // Buscar un número (puede tener decimales) justo antes de la letra 'K'
+            const match = runString.match(/(\d+(?:\.\d+)?)K/i);
+            if (match && match[1]) {
+                return parseFloat(match[1]);
+            }
+            return 0;
+        }
+
+        // Función para calcular la suma de TODOS los kilómetros completados
+        function calculateTotalKm(progress) {
+            let total = 0;
+            for (const key in progress) {
+                if (progress[key]) {
+                    const parts = key.split('-'); // ej: run-0-1-mid
+                    const pIndex = parseInt(parts[1]);
+                    const wIndex = parseInt(parts[2]);
+                    const type = parts[3];
+
+                    if (planData[pIndex] && planData[pIndex].weeks[wIndex]) {
+                        const runString = planData[pIndex].weeks[wIndex][type];
+                        total += extractKm(runString);
+                    }
+                }
+            }
+            return total;
         }
 
         function renderApp() {
@@ -566,17 +640,34 @@
             setTimeout(() => { currentRunId = null; }, 300);
         }
 
+        function showCongratsPopup(km) {
+            // Formatea el número para quitar el .0 si es exacto (ej: 45.0 -> 45)
+            const formattedKm = km % 1 === 0 ? km : km.toFixed(1);
+            document.getElementById('congratsKmValue').textContent = formattedKm;
+            congratsOverlay.classList.add('active');
+        }
+
+        window.closeCongratsPopup = function() {
+            congratsOverlay.classList.remove('active');
+        }
+
         function toggleRunStatus(isDone) {
             if (!currentRunId) return;
             
             const progress = getProgress();
+            
             if (isDone) {
                 progress[currentRunId] = true;
+                saveProgress(progress);
+                
+                // Calcular el total y mostrar pop-up de felicitación
+                const totalKm = calculateTotalKm(progress);
+                showCongratsPopup(totalKm);
             } else {
                 delete progress[currentRunId];
+                saveProgress(progress);
             }
             
-            saveProgress(progress);
             renderApp();
             closeModal();
         }
@@ -587,6 +678,10 @@
 
         modalOverlay.addEventListener('click', (e) => {
             if(e.target === modalOverlay) closeModal();
+        });
+
+        congratsOverlay.addEventListener('click', (e) => {
+            if(e.target === congratsOverlay) closeCongratsPopup();
         });
 
         renderApp();
