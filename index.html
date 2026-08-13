@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Half Marathon Training Plan</title>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --success-hover: #16a34a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px 16px;
+            padding-bottom: 80px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .phase-section {
+            margin-bottom: 32px;
+        }
+
+        .phase-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .week-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .week-header {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .run-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            background: #f9fafb;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .run-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .run-btn:active {
+            transform: scale(0.98);
+        }
+
+        .run-type {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .run-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .status-badge {
+            background: #e5e7eb;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        /* Estilos cuando está completado */
+        .run-btn.done {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .run-btn.done .run-label {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .run-btn.done .status-badge {
+            background: white;
+            color: var(--success);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 380px;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            margin-bottom: 16px;
+        }
+
+        .modal-date {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .modal-type {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .modal-content {
+            background: #f8fafc;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--accent);
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-mark {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-mark.mark-done {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-mark.mark-undone {
+            background: #ef4444;
+            color: white;
+            display: none;
+        }
+
+        .btn-close {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Half Marathon Plan</h1>
+        <p>Your journey to race day</p>
+    </header>
+
+    <div id="app-container"></div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-date" id="modalDate">Week of ...</div>
+                <div class="modal-type" id="modalType">Run Type</div>
+            </div>
+            <div class="modal-content" id="modalContent">
+                Run Details
+            </div>
+            <div class="modal-actions">
+                <button class="btn-mark mark-done" id="btnMarkDone">¡Marcar como Listo!</button>
+                <button class="btn-mark mark-undone" id="btnMarkUndone">Desmarcar entreno</button>
+                <button class="btn-close" id="btnClose">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const planData = [
+            {
+                title: "August - October 2026: Building Your Base",
+                weeks: [
+                    { date: "17 Aug 2026", mid: "5K easy", long: "6K" },
+                    { date: "24 Aug 2026", mid: "5K easy", long: "7K" },
+                    { date: "31 Aug 2026", mid: "5K with some faster sections", long: "8K" },
+                    { date: "7 Sep 2026", mid: "5K easy", long: "6K" },
+                    { date: "14 Sep 2026", mid: "6K easy", long: "9K" },
+                    { date: "21 Sep 2026", mid: "6K easy", long: "10K" },
+                    { date: "28 Sep 2026", mid: "6K with hills", long: "8K" },
+                    { date: "5 Oct 2026", mid: "6K easy", long: "11K" },
+                    { date: "12 Oct 2026", mid: "6K easy", long: "12K" },
+                    { date: "19 Oct 2026", mid: "6K with 3 x 5 min brisk", long: "10K" },
+                    { date: "26 Oct 2026", mid: "7K easy", long: "13K" },
+                    { date: "2 Nov 2026", mid: "7K easy", long: "14K" }
+                ]
+            },
+            {
+                title: "November 2026 - January 2027: Endurance Phase",
+                weeks: [
+                    { date: "9 Nov 2026", mid: "7K steady", long: "12K" },
+                    { date: "16 Nov 2026", mid: "8K steady", long: "15K" },
+                    { date: "23 Nov 2026", mid: "7K easy", long: "13K" },
+                    { date: "30 Nov 2026", mid: "8K steady", long: "16K" },
+                    { date: "7 Dec 2026", mid: "8K with tempo sections", long: "14K" },
+                    { date: "14 Dec 2026", mid: "8K steady", long: "17K" },
+                    { date: "21 Dec 2026", mid: "7K easy", long: "15K" },
+                    { date: "28 Dec 2026", mid: "8K steady", long: "18K" },
+                    { date: "4 Jan 2027", mid: "8K with tempo sections", long: "16K" },
+                    { date: "11 Jan 2027", mid: "8K steady", long: "19K" }
+                ]
+            },
+            {
+                title: "February - March 2027: Half Marathon Specific Training",
+                weeks: [
+                    { date: "18 Jan 2027", mid: "8K steady", long: "16K" },
+                    { date: "25 Jan 2027", mid: "8K with 4 x 5 min brisk", long: "20K" },
+                    { date: "1 Feb 2027", mid: "8K easy", long: "17K" },
+                    { date: "8 Feb 2027", mid: "9K steady", long: "21K" },
+                    { date: "15 Feb 2027", mid: "8K easy", long: "18K" },
+                    { date: "22 Feb 2027", mid: "9K steady", long: "20K" },
+                    { date: "1 Mar 2027", mid: "8K easy", long: "16K" }
+                ]
+            },
+            {
+                title: "Taper",
+                weeks: [
+                    { date: "8 Mar 2027", mid: "6K easy", long: "14K" },
+                    { date: "15 Mar 2027", mid: "6K easy", long: "12K" },
+                    { date: "22 Mar 2027", mid: "5K easy", long: "8K" },
+                    { date: "29 Mar 2027", mid: "5K very easy", long: "Half Marathon (4 Apr 2027)" }
+                ]
+            }
+        ];
+
+        const container = document.getElementById('app-container');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const btnClose = document.getElementById('btnClose');
+        const btnMarkDone = document.getElementById('btnMarkDone');
+        const btnMarkUndone = document.getElementById('btnMarkUndone');
+        
+        let currentRunId = null;
+
+        // Recuperar progreso de LocalStorage
+        function getProgress() {
+            const saved = localStorage.getItem('halfMarathonProgress');
+            return saved ? JSON.parse(saved) : {};
+        }
+
+        // Guardar progreso en LocalStorage
+        function saveProgress(progressObj) {
+            localStorage.setItem('halfMarathonProgress', JSON.stringify(progressObj));
+        }
+
+        // Renderizar la interfaz
+        function renderApp() {
+            const progress = getProgress();
+            let html = '';
+
+            planData.forEach((phase, pIndex) => {
+                html += `<div class="phase-section">
+                            <h2 class="phase-title">${phase.title}</h2>`;
+                
+                phase.weeks.forEach((week, wIndex) => {
+                    const midId = `run-${pIndex}-${wIndex}-mid`;
+                    const longId = `run-${pIndex}-${wIndex}-long`;
+                    
+                    const isMidDone = progress[midId] ? 'done' : '';
+                    const isLongDone = progress[longId] ? 'done' : '';
+                    
+                    const midText = progress[midId] ? 'DONE' : 'TO DO';
+                    const longText = progress[longId] ? 'DONE' : 'TO DO';
+
+                    html += `
+                    <div class="week-card">
+                        <div class="week-header">Week Beginning: ${week.date}</div>
+                        
+                        <button class="run-btn ${isMidDone}" onclick="openModal('${midId}', '${week.date}', 'Midweek Run', '${week.mid}')">
+                            <div class="run-type">
+                                <span class="run-label">Midweek Run</span>
+                                <span>${week.mid}</span>
+                            </div>
+                            <span class="status-badge">${midText}</span>
+                        </button>
+
+                        <button class="run-btn ${isLongDone}" onclick="openModal('${longId}', '${week.date}', 'Weekend Long Run', '${week.long}')">
+                            <div class="run-type">
+                                <span class="run-label">Weekend Run</span>
+                                <span>${week.long}</span>
+                            </div>
+                            <span class="status-badge">${longText}</span>
+                        </button>
+                    </div>`;
+                });
+                
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Lógica del Modal
+        window.openModal = function(id, date, type, content) {
+            currentRunId = id;
+            document.getElementById('modalDate').textContent = "Week: " + date;
+            document.getElementById('modalType').textContent = type;
+            document.getElementById('modalContent').textContent = content;
+            
+            const progress = getProgress();
+            if(progress[currentRunId]) {
+                btnMarkDone.style.display = 'none';
+                btnMarkUndone.style.display = 'block';
+            } else {
+                btnMarkDone.style.display = 'block';
+                btnMarkUndone.style.display = 'none';
+            }
+
+            modalOverlay.classList.add('active');
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            currentRunId = null;
+        }
+
+        // Marcar/Desmarcar entreno
+        function toggleRunStatus(isDone) {
+            if (!currentRunId) return;
+            
+            const progress = getProgress();
+            if (isDone) {
+                progress[currentRunId] = true;
+            } else {
+                delete progress[currentRunId];
+            }
+            
+            saveProgress(progress);
+            renderApp();
+            closeModal();
+        }
+
+        // Event Listeners
+        btnClose.addEventListener('click', closeModal);
+        btnMarkDone.addEventListener('click', () => toggleRunStatus(true));
+        btnMarkUndone.addEventListener('click', () => toggleRunStatus(false));
+
+        // Cerrar al tocar fuera del modal
+        modalOverlay.addEventListener('click', (e) => {
+            if(e.target === modalOverlay) closeModal();
+        });
+
+        // Iniciar
+        renderApp();
+    </script>
+</body>
+</html>
