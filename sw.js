@@ -1,11 +1,11 @@
-const CACHE_NAME = 'maraton-cache-v1';
+const CACHE_NAME = 'maraton-cache-v2';
 // Archivos a guardar para que funcione sin internet
 const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  '.',
+  'index.html',
+  'manifest.json',
+  'icon-192.png',
+  'icon-512.png'
 ];
 
 // Instalación del Service Worker
