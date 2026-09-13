@@ -1,4 +1,4 @@
-const CACHE_NAME = 'maraton-cache-v3';
+const CACHE_NAME = 'maraton-cache-v4';
 // Archivos a guardar para que funcione sin internet
 const urlsToCache = [
   '.',
