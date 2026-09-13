@@ -1,30 +1,47 @@
-const CACHE_NAME = 'maraton-cache-v4';
-// Archivos a guardar para que funcione sin internet
+const CACHE_NAME = 'maraton-cache-v5';
 const urlsToCache = [
-  '.',
-  'index.html',
-  'manifest.json',
-  'icon-192.png',
-  'icon-512.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
-// Instalación del Service Worker
 self.addEventListener('install', event => {
+  self.skipWaiting(); // Fuerza la instalación inmediata
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
 });
 
-// Interceptar peticiones para devolver la versión guardada si no hay internet
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName); // Borra rastros antiguos
+          }
+        })
+      );
+    }).then(() => self.clients.claim()) // Toma el control de la pantalla al instante
+  );
+});
+
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
+    // El parámetro 'no-store' prohíbe usar la memoria interna del teléfono para esta consulta
+    fetch(event.request, { cache: 'no-store' })
       .then(response => {
-        // Devuelve el caché si existe, si no, lo descarga de la red
-        return response || fetch(event.request);
+        // Guarda la versión nueva recién descargada
+        return caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, response.clone());
+          return response;
+        });
+      })
+      .catch(() => {
+        // Solo usa la memoria si el teléfono está en modo avión o sin cobertura
+        return caches.match(event.request);
       })
   );
 });
